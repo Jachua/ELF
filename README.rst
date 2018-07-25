@@ -137,7 +137,10 @@ Here is a basic set of commands to run and play the bot via the GTP protocol:
 
 3) Change directory to ``scripts/elfgames/go/``
 
-4) Run ``./gtp.sh path/to/modelfile.bin --verbose --gpu 0 --num_block 20 --dim 224 --mcts_puct 1.50 --batchsize 16 --mcts_rollout_per_batch 16 --mcts_threads 2 --mcts_rollout_per_thread 8192 --resign_thres 0.05 --mcts_virtual_loss 1``
+4) Follow instructions from `this repo`__ to run the server.
+__ https://github.com/Jachua/ELF-API
+
+5) Run ``./gtp.sh path/to/modelfile.bin --verbose --gpu 0 --num_block 20 --dim 224 --mcts_puct 1.50 --batchsize 16 --mcts_rollout_per_batch 16 --mcts_threads 2 --mcts_rollout_per_thread 8192 --resign_thres 0.05 --mcts_virtual_loss 1``
 
 We've found that the above settings work well for playing the bot. You may change ``mcts_rollout_per_thread`` to tune the thinking time per move.
 
