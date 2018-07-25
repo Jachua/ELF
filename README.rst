@@ -133,6 +133,7 @@ Running a Go bot
 ----------------
 
 To run the go server, follow instructions from  `this repo`__ .
+
 __ https://github.com/Jachua/ELF-API
 
 Here is a basic set of commands to run and play the bot via the GTP protocol:
