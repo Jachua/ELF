@@ -6,6 +6,26 @@
 .. |copy| unicode:: 0xA9
 .. |---| unicode:: U+02014
 
+******************************
+
+This is an adaptation of the original repo for setting up a remote server to communicate with the AI Go bot developed by the Facebook team.
+
+To set up the server and CLI, follow the instructions on `this repo`__.
+
+__ https://github.com/Jachua/ELF-API
+
+Edit the ```game_server``` field in ```scripts/elfgames/go/server_addrs.py``` to be the game server's IP address. If unspecified, the game will run on the local address. The server address provided must match the server address for ELF-API. 
+
+Note: 
+
+The API is developed on a `previous commit`__ for ELF. While it might be compatible with the lastest commits, it is not guaranteed to work reliably.
+
+__ https://github.com/Jachua/ELF/tree/1b6859fa852056f835406a15c9eaa13817910add
+
+The ELF engine developed by the Facebook team also may not work properly on a driver other than NVIDIA.
+
+******************************
+
 ===
 ELF
 ===
@@ -154,6 +174,7 @@ Here is the command to analyze an existing sgf file:
 
 3) Change directory to ``scripts/elfgames/go/``
 
-4) Run ``./analysis.sh /path/to/model --preload_sgf /path/to/sgf --preload_sgf_move_to [move_number] --dump_record_prefix [tree] --verbose --gpu 0 --mcts_puct 1.50 --batchsize 16 --mcts_rollout_per_batch 16 --mcts_threads 2 --mcts_rollout_per_thread 8192 --resign_thres 0.0 --mcts_virtual_loss 1 --num_games 1``
-
-The settings for rollouts are similar as above. The process should run automatically after loading the environment, models and previous moves. You should see the move suggested by the AI after each move, along with its value and prior. This process will also generate a lot of tree files, prefixed with ``tree`` (you can change it with ``--dump_record_prefix`` option above.) The tree files will contain the full search at each move along with its prior and value. To abort the process simply kill it as the current implementation will run it to the end of the game. 
+--resign_thres 0.05 --mcts_virtual_loss 1path/to/model --preload_sgf /path/to/sgf --preload_sgf_move_to [move_number] --dump_record_prefix [tree] --verbose --gpu 0 --mcts_puct 1.50 --batchsize 16 --mcts_rollout_per_batch 16 --mcts_threads 2 --mcts_rollout_per_thread 8192 --resign_thres 0.0 --mcts_virtual_loss 1 --num_games 1``
+--resign_thres 0.05 --mcts_virtual_loss 1
+--resign_thres 0.05 --mcts_virtual_loss 1s are similar as above. The process should run automatically after loading the environment, models and previous moves. You should see the move suggested by the AI after each move, along with its value and prior. This process will also generate a lot of tree files, prefixed with ``tree`` (you can change it with ``--dump_record_prefix`` option above.) The tree files will contain the full search at each move along with its prior and value. To abort the process simply kill it as the current implementation will run it to the end of the game. 
+--resign_thres 0.05 --mcts_virtual_loss 1

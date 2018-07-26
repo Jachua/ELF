@@ -8,6 +8,13 @@ import inspect
 import traceback
 from collections import Counter
 
+import grpc
+
+import play_pb2
+import play_pb2_grpc
+
+from server_addrs import addrs  
+
 
 def move2xy(v):
     if v.lower() == "pass":
@@ -119,7 +126,7 @@ class GoConsole:
         while True:
             if getattr(self, "repeat", 0) > 0:
                 self.repeat -= 1
-                cmd = self.repeat_cmd
+                cmd = self.repeat_cmd 
             else:
                 cmd = input(prompt_str)
             items = cmd.split()
@@ -239,12 +246,8 @@ class GoConsoleGTP:
             return False, msg
 
     def on_play(self, batch, items, reply):
-        ret, msg = self.check_player(batch, items[1][0])
-        if ret:
-            reply["a"] = self.move2action(items[2])
-            return True, reply
-        else:
-            return False, msg
+        reply["a"] = self.move2action(items[2]) 
+        return True, reply
 
     def on_showboard(self, batch, items, reply):
         self.showboard(batch)
@@ -291,6 +294,8 @@ class GoConsoleGTP:
             if key.startswith("on_")
         }
 
+        self.prev_player = 0
+
     def move2action(self, v):
         if v.lower() in self.actions:
             return self.actions[v.lower()]
@@ -336,37 +341,32 @@ class GoConsoleGTP:
         print("\n%s %s\n\n" % (("=" if ret else "?"), msg))
 
     def prompt(self, prompt_str, batch):
-        # Show last command results.
-        if self.last_cmd == "play" or self.last_cmd == "clear_board":
-            self.print_msg(True, "")
-        elif self.last_cmd == "genmove":
-            self.print_msg(True, self.get_last_move(batch))
-
-        self.last_cmd = ""
-
+        address = addrs['game_server']
+        if address != "":
+            channel = grpc.insecure_channel(address + ':50051')
+        else :
+            channel = grpc.insecure_channel("localhost:50051")
+        stub = play_pb2_grpc.TurnStub(channel)
+        while not stub.HasChosen(play_pb2.State(status = True)).status:
+            pass
+        AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
+        human_color = AI_color % 2 + 1
+        reply = dict(pi = None, a = None, V = 0)
         while True:
-            cmd = input(prompt_str)
-            items = cmd.split()
-            if len(items) < 1:
-                self.print_msg(False, "Invalid input")
-                continue
-
-            c = items[0]
-            reply = dict(pi=None, a=None, V=0)
-
-            try:
-                ret, msg = self.commands[c](batch, items, reply)
-                self.last_cmd = c
-                if not ret:
-                    self.print_msg(False, msg)
-                else:
-                    if isinstance(msg, dict):
-                        return msg
-                    elif isinstance(msg, str):
-                        self.print_msg(True, msg)
-                    else:
-                        self.print_msg(True, "")
-
-            except Exception:
-                print(traceback.format_exc())
-                self.print_msg(False, "Invalid command")
+            if self.prev_player == 1:
+                move = self.get_last_move(batch)
+                x, y = move2xy(move)
+                _ = stub.SetMove(play_pb2.Step(x = x, y = y, player = play_pb2.Player(color =  AI_color)))
+                _ = stub.UpdateNext(play_pb2.State(status = True))
+            if stub.IsNextPlayer(play_pb2.Player(color = AI_color)).status:
+                reply["a"] = self.actions["skip"]
+                self.prev_player = 1
+                return reply
+            else:
+                while stub.IsNextPlayer(play_pb2.Player(color = human_color)).status:
+                    pass
+                human_xy = stub.GetMove(play_pb2.Player(color = human_color))
+                reply["a"] = self.move2action(xy2move(human_xy.x, human_xy.y))
+                self.prev_player = 2
+                return reply
+                
