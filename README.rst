@@ -6,7 +6,6 @@
 .. |copy| unicode:: 0xA9
 .. |---| unicode:: U+02014
 
-<<<<<<< HEAD
 ******************************
 
 This is an adaptation of the original repo for setting up a remote server to communicate with the AI Go bot developed by the Facebook team.
@@ -26,10 +25,6 @@ __ https://github.com/Jachua/ELF/tree/1b6859fa852056f835406a15c9eaa13817910add
 The ELF engine developed by the Facebook team also may not work properly on a driver other than NVIDIA.
 
 ******************************
-=======
-
-This is an edited version of the original repo to include a client stub in console_lib.py for communication with a go server.
->>>>>>> 82a8ea6868da9085d2f59baf9c31b458124a9ffc
 
 ===
 ELF
