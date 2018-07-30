@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='play.proto',
   package='play',
   syntax='proto3',
-  serialized_pb=_b('\n\nplay.proto\x12\x04play\":\n\x04Step\x12\t\n\x01x\x18\x01 \x01(\r\x12\t\n\x01y\x18\x02 \x01(\r\x12\x1c\n\x06player\x18\x03 \x01(\x0b\x32\x0c.play.Player\"\x17\n\x06Player\x12\r\n\x05\x63olor\x18\x01 \x01(\r\"\x17\n\x05State\x12\x0e\n\x06status\x18\x01 \x01(\x08\x32\xa9\x02\n\x04Turn\x12$\n\x07SetMove\x12\n.play.Step\x1a\x0b.play.State\"\x00\x12%\n\x07GetMove\x12\x0c.play.Player\x1a\n.play.Step\"\x00\x12(\n\nUpdateNext\x12\x0b.play.State\x1a\x0b.play.State\"\x00\x12+\n\x0cIsNextPlayer\x12\x0c.play.Player\x1a\x0b.play.State\"\x00\x12(\n\tSetPlayer\x12\x0c.play.Player\x1a\x0b.play.State\"\x00\x12*\n\x0bGetAIPlayer\x12\x0b.play.State\x1a\x0c.play.Player\"\x00\x12\'\n\tHasChosen\x12\x0b.play.State\x1a\x0b.play.State\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\nplay.proto\x12\x04play\":\n\x04Step\x12\t\n\x01x\x18\x01 \x01(\r\x12\t\n\x01y\x18\x02 \x01(\r\x12\x1c\n\x06player\x18\x03 \x01(\x0b\x32\x0c.play.Player\"#\n\x06Player\x12\r\n\x05\x63olor\x18\x01 \x01(\r\x12\n\n\x02ID\x18\x02 \x01(\t\"#\n\x05State\x12\x0e\n\x06status\x18\x01 \x01(\x08\x12\n\n\x02ID\x18\x02 \x01(\t2\x9e\x03\n\x04Turn\x12$\n\x07SetMove\x12\n.play.Step\x1a\x0b.play.State\"\x00\x12%\n\x07GetMove\x12\x0c.play.Player\x1a\n.play.Step\"\x00\x12(\n\nUpdateNext\x12\x0b.play.State\x1a\x0b.play.State\"\x00\x12+\n\x0cIsNextPlayer\x12\x0c.play.Player\x1a\x0b.play.State\"\x00\x12(\n\tSetPlayer\x12\x0c.play.Player\x1a\x0b.play.State\"\x00\x12*\n\x0bGetAIPlayer\x12\x0b.play.State\x1a\x0c.play.Player\"\x00\x12\'\n\tHasChosen\x12\x0b.play.State\x1a\x0b.play.State\"\x00\x12\'\n\x08HasMoved\x12\x0c.play.Player\x1a\x0b.play.State\"\x00\x12%\n\x07NewRoom\x12\x0b.play.State\x1a\x0b.play.State\"\x00\x12#\n\x05GetID\x12\x0b.play.State\x1a\x0b.play.State\"\x00\x62\x06proto3')
 )
 
 
@@ -84,6 +84,13 @@ _PLAYER = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ID', full_name='play.Player.ID', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -97,7 +104,7 @@ _PLAYER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=80,
-  serialized_end=103,
+  serialized_end=115,
 )
 
 
@@ -115,6 +122,13 @@ _STATE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ID', full_name='play.State.ID', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -127,8 +141,8 @@ _STATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=105,
-  serialized_end=128,
+  serialized_start=117,
+  serialized_end=152,
 )
 
 _STEP.fields_by_name['player'].message_type = _PLAYER
@@ -166,8 +180,8 @@ _TURN = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=131,
-  serialized_end=428,
+  serialized_start=155,
+  serialized_end=569,
   methods=[
   _descriptor.MethodDescriptor(
     name='SetMove',
@@ -227,6 +241,33 @@ _TURN = _descriptor.ServiceDescriptor(
     name='HasChosen',
     full_name='play.Turn.HasChosen',
     index=6,
+    containing_service=None,
+    input_type=_STATE,
+    output_type=_STATE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='HasMoved',
+    full_name='play.Turn.HasMoved',
+    index=7,
+    containing_service=None,
+    input_type=_PLAYER,
+    output_type=_STATE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='NewRoom',
+    full_name='play.Turn.NewRoom',
+    index=8,
+    containing_service=None,
+    input_type=_STATE,
+    output_type=_STATE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetID',
+    full_name='play.Turn.GetID',
+    index=9,
     containing_service=None,
     input_type=_STATE,
     output_type=_STATE,

@@ -15,7 +15,6 @@ import play_pb2_grpc
 
 from server_addrs import addrs  
 
-
 def move2xy(v):
     if v.lower() == "pass":
         return -1, -1
@@ -247,8 +246,20 @@ class GoConsoleGTP:
             return False, msg
 
     def on_play(self, batch, items, reply):
+        # channel = grpc.insecure_channel('localhost:50051')
+        # stub = play_pb2_grpc.TurnStub(channel)
+        # #player_move =  string {A1, T19}
+        # player_move = xy2move(stub.GetPlayerMove(play_pb2.State(status = 0)))
+        # reply["a"] = self.move2action(player_move)
+        # return True, reply
+        # ret, msg = self.check_player(batch, items[1][0])
+        # if ret:
+            #play B move
+            #move = items[2] {A1, T19}
         reply["a"] = self.move2action(items[2]) 
         return True, reply
+        # else:
+        #     return False, msg
 
     def on_showboard(self, batch, items, reply):
         self.showboard(batch)
@@ -320,6 +331,12 @@ class GoConsoleGTP:
         return batch.GC.getGame(0).getNextPlayer()
 
     def get_last_move(self, batch):
+        # channel = grpc.insecure_channel('localhost:50051')
+        # stub = play_pb2_grpc.TurnStub(channel)
+        # move = batch.GC.getGame(0).getLastMove()
+        # x, y = move2xy(move)
+        # _ = stub.AIMove(play_pb2.Step(x = x, y = y))
+        # return move
         return batch.GC.getGame(0).getLastMove()
 
     def get_final_score(self, batch):
@@ -341,6 +358,44 @@ class GoConsoleGTP:
     def print_msg(self, ret, msg):
         print("\n%s %s\n\n" % (("=" if ret else "?"), msg))
 
+    # def prompt(self, prompt_str, batch):
+    #     # Show last command results.
+    #     # if self.last_cmd == "play" or self.last_cmd == "clear_board":
+    #     #     self.print_msg(True, "")
+    #     # elif self.last_cmd == "genmove":
+    #     #     self.print_msg(True, self.get_last_move(batch))
+
+
+    #     # self.last_cmd = ""
+
+    #     channel = grpc.insecure_channel('localhost:50051')
+    #     stub = play_pb2_grpc.TurnStub(channel)
+    #     id = stub.NewRoom(play_pb2.State(status = True, ID = "")).ID
+    #     while not stub.HasChosen(play_pb2.State(status = True, ID = id)).status:
+    #         pass
+    #     AI_color = stub.GetAIPlayer(play_pb2.State(status = True, ID = id)).color
+    #     human_color = AI_color % 2 + 1
+    #     reply = dict(pi = None, a = None, V = 0)
+    #     while True:
+    #         if self.prev_player == 1:
+    #             move = self.get_last_move(batch)
+    #             x, y = move2xy(move)
+    #             # print("\n\n\nCheck x, y: ", x, ", ", y, "\n\n\n")
+    #             _ = stub.SetMove(play_pb2.Step(x = x, y = y, player = play_pb2.Player(color =  AI_color, ID = id)))
+    #             _ = stub.UpdateNext(play_pb2.State(status = True))
+    #         if stub.IsNextPlayer(play_pb2.Player(color = AI_color, ID = id)).status:
+    #             reply["a"] = self.actions["skip"]
+    #             # print("\n\n\nCheck\n\n\n")
+    #             self.prev_player = 1
+    #             return reply
+    #         # ret, msg = self.commands["genmove"](batch, items, reply)
+    #         else:
+    #             while stub.IsNextPlayer(play_pb2.Player(color = human_color, ID = id)).status:
+    #                 pass
+    #             human_xy = stub.GetMove(play_pb2.Player(color = human_color, ID = id))
+    #             reply["a"] = self.move2action(xy2move(human_xy.x, human_xy.y))
+    #             self.prev_player = 2
+    #             return reply
     def prompt(self, prompt_str, batch):
         address = addrs['game_server']
         if address != "":
@@ -370,4 +425,3 @@ class GoConsoleGTP:
                 reply["a"] = self.move2action(xy2move(human_xy.x, human_xy.y))
                 self.prev_player = 2
                 return reply
-                

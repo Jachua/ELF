@@ -10,6 +10,7 @@ class TurnStub(object):
 
   def __init__(self, channel):
     """Constructor.
+
     Args:
       channel: A grpc.Channel.
     """
@@ -45,6 +46,21 @@ class TurnStub(object):
         )
     self.HasChosen = channel.unary_unary(
         '/play.Turn/HasChosen',
+        request_serializer=play__pb2.State.SerializeToString,
+        response_deserializer=play__pb2.State.FromString,
+        )
+    self.HasMoved = channel.unary_unary(
+        '/play.Turn/HasMoved',
+        request_serializer=play__pb2.Player.SerializeToString,
+        response_deserializer=play__pb2.State.FromString,
+        )
+    self.NewRoom = channel.unary_unary(
+        '/play.Turn/NewRoom',
+        request_serializer=play__pb2.State.SerializeToString,
+        response_deserializer=play__pb2.State.FromString,
+        )
+    self.GetID = channel.unary_unary(
+        '/play.Turn/GetID',
         request_serializer=play__pb2.State.SerializeToString,
         response_deserializer=play__pb2.State.FromString,
         )
@@ -103,6 +119,27 @@ class TurnServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def HasMoved(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def NewRoom(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetID(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_TurnServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -138,6 +175,21 @@ def add_TurnServicer_to_server(servicer, server):
       ),
       'HasChosen': grpc.unary_unary_rpc_method_handler(
           servicer.HasChosen,
+          request_deserializer=play__pb2.State.FromString,
+          response_serializer=play__pb2.State.SerializeToString,
+      ),
+      'HasMoved': grpc.unary_unary_rpc_method_handler(
+          servicer.HasMoved,
+          request_deserializer=play__pb2.Player.FromString,
+          response_serializer=play__pb2.State.SerializeToString,
+      ),
+      'NewRoom': grpc.unary_unary_rpc_method_handler(
+          servicer.NewRoom,
+          request_deserializer=play__pb2.State.FromString,
+          response_serializer=play__pb2.State.SerializeToString,
+      ),
+      'GetID': grpc.unary_unary_rpc_method_handler(
+          servicer.GetID,
           request_deserializer=play__pb2.State.FromString,
           response_serializer=play__pb2.State.SerializeToString,
       ),
