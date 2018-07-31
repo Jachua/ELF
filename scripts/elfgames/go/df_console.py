@@ -12,6 +12,14 @@ import os
 from rlpytorch import Evaluator, load_env
 from console_lib import GoConsoleGTP
 
+import grpc
+
+import play_pb2
+import play_pb2_grpc
+
+from server_addrs import addrs   
+
+
 
 if __name__ == '__main__':
     additional_to_load = {
@@ -52,9 +60,72 @@ if __name__ == '__main__':
     mi["actor"].eval()
 
     console = GoConsoleGTP(GC, evaluator)
+    address = addrs['game_server']
+    if address != "":
+        channel = grpc.insecure_channel(address + ':50051')
+    else :
+        channel = grpc.insecure_channel("localhost:50051")
+    stub = play_pb2_grpc.TurnStub(channel)
+    # print("\n\n\nCheck connect\n\n\n")
+
+    def move2xy(v):
+        if v.lower() == "pass":
+            return -1, -1
+        x = ord(v[0].lower()) - ord('a')
+        # Skip 'i'
+        if x >= 9:
+            x -= 1
+        y = int(v[1:]) - 1
+        return x, y
+
+    def xy2move(x, y):
+        if x == -1 and y == -1:
+            return "pass"
+
+        if x >= 8:
+            x += 1
+        return chr(x + 65) + str(y + 1)
+
+    res_arr = stub.GetResumed(play_pb2.State(status = True)).move
+    console.res_len = len(res_arr)
+    # console.res_ind = 3
+    # arr = ["BKD", "WFB", "BGA"]
+    if console.res_len > 0 and res_arr[-1][0].upper() == "B":
+        _ = stub.UpdateNext(play_pb2.State(status = True))
 
     def human_actor(batch):
-        return console.prompt("", batch)
+        # print("\n\n\nCheck human_actor\n\n\n")
+        while not stub.HasChosen(play_pb2.State(status = True)).status:
+            pass
+        AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
+        human_color = AI_color % 2 + 1
+        reply = dict(pi = None, a = None, V = 0)
+        # is_resumed = stub.IsResumed(play_pb2.State(status = True)).status 
+        if console.res_len > 0:
+            # print("\n\n\nCheck is_resumed = true\n\n\n")
+            # print("\n\n\n", arr[-console.res_ind], "\n\n\n")
+            reply["a"] = console.str2action(res_arr[-console.res_len])
+            console.res_len -= 1
+            return reply
+        # print("\n\n\nCheck is_resumed = false\n\n\n")    
+        while True:
+            if console.prev_player == 1:
+                move = console.get_last_move(batch)
+                x, y = move2xy(move)
+                _ = stub.SetMove(play_pb2.Step(x = x, y = y, player = play_pb2.Player(color =  AI_color)))
+                _ = stub.UpdateNext(play_pb2.State(status = True))
+            if stub.IsNextPlayer(play_pb2.Player(color = AI_color)).status:
+                reply["a"] = console.actions["skip"]
+                console.prev_player = 1
+                return reply
+            else:
+                while stub.IsNextPlayer(play_pb2.Player(color = human_color)).status:
+                    pass
+                human_xy = stub.GetMove(play_pb2.Player(color = human_color))
+                reply["a"] = console.move2action(xy2move(human_xy.x, human_xy.y))
+                console.prev_player = 2
+                return reply 
+        # return console.prompt("", batch)
 
     def actor(batch):
         return console.actor(batch)

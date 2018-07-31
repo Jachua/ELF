@@ -54,15 +54,15 @@ class TurnStub(object):
         request_serializer=play__pb2.Player.SerializeToString,
         response_deserializer=play__pb2.State.FromString,
         )
-    self.NewRoom = channel.unary_unary(
-        '/play.Turn/NewRoom',
-        request_serializer=play__pb2.State.SerializeToString,
+    self.SetResumed = channel.unary_unary(
+        '/play.Turn/SetResumed',
+        request_serializer=play__pb2.Resumed.SerializeToString,
         response_deserializer=play__pb2.State.FromString,
         )
-    self.GetID = channel.unary_unary(
-        '/play.Turn/GetID',
+    self.GetResumed = channel.unary_unary(
+        '/play.Turn/GetResumed',
         request_serializer=play__pb2.State.SerializeToString,
-        response_deserializer=play__pb2.State.FromString,
+        response_deserializer=play__pb2.Resumed.FromString,
         )
 
 
@@ -126,14 +126,14 @@ class TurnServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def NewRoom(self, request, context):
+  def SetResumed(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def GetID(self, request, context):
+  def GetResumed(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -183,15 +183,15 @@ def add_TurnServicer_to_server(servicer, server):
           request_deserializer=play__pb2.Player.FromString,
           response_serializer=play__pb2.State.SerializeToString,
       ),
-      'NewRoom': grpc.unary_unary_rpc_method_handler(
-          servicer.NewRoom,
-          request_deserializer=play__pb2.State.FromString,
+      'SetResumed': grpc.unary_unary_rpc_method_handler(
+          servicer.SetResumed,
+          request_deserializer=play__pb2.Resumed.FromString,
           response_serializer=play__pb2.State.SerializeToString,
       ),
-      'GetID': grpc.unary_unary_rpc_method_handler(
-          servicer.GetID,
+      'GetResumed': grpc.unary_unary_rpc_method_handler(
+          servicer.GetResumed,
           request_deserializer=play__pb2.State.FromString,
-          response_serializer=play__pb2.State.SerializeToString,
+          response_serializer=play__pb2.Resumed.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

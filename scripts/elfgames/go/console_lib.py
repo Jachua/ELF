@@ -308,6 +308,8 @@ class GoConsoleGTP:
 
         self.prev_player = 0
 
+        self.res_len = 0
+
     def move2action(self, v):
         if v.lower() in self.actions:
             return self.actions[v.lower()]
@@ -396,32 +398,50 @@ class GoConsoleGTP:
     #             reply["a"] = self.move2action(xy2move(human_xy.x, human_xy.y))
     #             self.prev_player = 2
     #             return reply
+    def str2action(self, s):
+        move = s[1] + str(ord(s[2]) - 65 + 1)
+        return self.move2action(move)
+
     def prompt(self, prompt_str, batch):
-        address = addrs['game_server']
-        if address != "":
-            channel = grpc.insecure_channel(address + ':50051')
-        else :
-            channel = grpc.insecure_channel("localhost:50051")
-        stub = play_pb2_grpc.TurnStub(channel)
-        while not stub.HasChosen(play_pb2.State(status = True)).status:
-            pass
-        AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
-        human_color = AI_color % 2 + 1
+    #     address = addrs['game_server']
+    #     if address != "":
+    #         channel = grpc.insecure_channel(address + ':50051')
+    #     else :
+    #         channel = grpc.insecure_channel("localhost:50051")
+    #     stub = play_pb2_grpc.TurnStub(channel)
+    #     print("\n\n\nCheck connect\n\n\n")
+    #     while not stub.HasChosen(play_pb2.State(status = True)).status:
+    #         pass
+    #     AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
+    #     human_color = AI_color % 2 + 1
         reply = dict(pi = None, a = None, V = 0)
-        while True:
-            if self.prev_player == 1:
-                move = self.get_last_move(batch)
-                x, y = move2xy(move)
-                _ = stub.SetMove(play_pb2.Step(x = x, y = y, player = play_pb2.Player(color =  AI_color)))
-                _ = stub.UpdateNext(play_pb2.State(status = True))
-            if stub.IsNextPlayer(play_pb2.Player(color = AI_color)).status:
-                reply["a"] = self.actions["skip"]
-                self.prev_player = 1
-                return reply
-            else:
-                while stub.IsNextPlayer(play_pb2.Player(color = human_color)).status:
-                    pass
-                human_xy = stub.GetMove(play_pb2.Player(color = human_color))
-                reply["a"] = self.move2action(xy2move(human_xy.x, human_xy.y))
-                self.prev_player = 2
-                return reply
+        return reply
+    #     # is_resumed = stub.IsResumed(play_pb2.State(status = True)).status 
+    #     is_resumed = True
+    #     if is_resumed:
+    #         arr = ["BKD", "WFB", "BGA"]
+    #         print("\n\n\nCheck is_resumed = true\n\n\n")
+    #         for i in arr:
+    #             reply["a"] = self.str2action(i)
+    #             return reply
+    #         is_resumed = False
+    #         print("\n\n\nCheck is_resumed = false\n\n\n")
+    #         if arr[-1][0].upper() == "B":
+    #             _ = stub.UpdateNext(play_pb2.State(status = True))
+    #     while True:
+    #         if self.prev_player == 1:
+    #             move = self.get_last_move(batch)
+    #             x, y = move2xy(move)
+    #             _ = stub.SetMove(play_pb2.Step(x = x, y = y, player = play_pb2.Player(color =  AI_color)))
+    #             _ = stub.UpdateNext(play_pb2.State(status = True))
+    #         if stub.IsNextPlayer(play_pb2.Player(color = AI_color)).status:
+    #             reply["a"] = self.actions["skip"]
+    #             self.prev_player = 1
+    #             return reply
+    #         else:
+    #             while stub.IsNextPlayer(play_pb2.Player(color = human_color)).status:
+    #                 pass
+    #             human_xy = stub.GetMove(play_pb2.Player(color = human_color))
+    #             reply["a"] = self.move2action(xy2move(human_xy.x, human_xy.y))
+    #             self.prev_player = 2
+                # return reply
