@@ -64,6 +64,16 @@ class TurnStub(object):
         request_serializer=play__pb2.State.SerializeToString,
         response_deserializer=play__pb2.Resumed.FromString,
         )
+    self.NewRoom = channel.unary_unary(
+        '/play.Turn/NewRoom',
+        request_serializer=play__pb2.State.SerializeToString,
+        response_deserializer=play__pb2.State.FromString,
+        )
+    self.GetID = channel.unary_unary(
+        '/play.Turn/GetID',
+        request_serializer=play__pb2.State.SerializeToString,
+        response_deserializer=play__pb2.State.FromString,
+        )
 
 
 class TurnServicer(object):
@@ -140,6 +150,20 @@ class TurnServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def NewRoom(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetID(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_TurnServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -192,6 +216,16 @@ def add_TurnServicer_to_server(servicer, server):
           servicer.GetResumed,
           request_deserializer=play__pb2.State.FromString,
           response_serializer=play__pb2.Resumed.SerializeToString,
+      ),
+      'NewRoom': grpc.unary_unary_rpc_method_handler(
+          servicer.NewRoom,
+          request_deserializer=play__pb2.State.FromString,
+          response_serializer=play__pb2.State.SerializeToString,
+      ),
+      'GetID': grpc.unary_unary_rpc_method_handler(
+          servicer.GetID,
+          request_deserializer=play__pb2.State.FromString,
+          response_serializer=play__pb2.State.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
