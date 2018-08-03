@@ -6,11 +6,13 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Console for DarkForest
-
 import os
-from rlpytorch import Evaluator, load_env
+import sys
+
+import torch
+
 from console_lib import GoConsoleGTP
+from rlpytorch import Evaluator, load_env
 
 import grpc
 
@@ -20,8 +22,37 @@ import play_pb2_grpc
 from server_addrs import addrs   
 
 
+def move2xy(v):
+    if v.lower() == "pass":
+        return -1, -1
+    x = ord(v[0].lower()) - ord('a')
+    # Skip 'i' 
+    if x >= 9:
+        x -= 1
+    y = int(v[1:]) - 1
+    return x, y
 
-if __name__ == '__main__':
+def xy2move(x, y):
+    if x == -1 and y == -1:
+        return "pass"
+
+    if x >= 8:
+        x += 1
+    return chr(x + 65) + str(y + 1)
+
+
+def main():
+    address = addrs['game_server']
+    if address != "":
+        channel = grpc.insecure_channel(address + ':50051')
+    else :
+        channel = grpc.insecure_channel("localhost:50051")
+    stub = play_pb2_grpc.TurnStub(channel)
+    print('Python version:', sys.version)
+    print('PyTorch version:', torch.__version__)
+    print('CUDA version', torch.version.cuda)
+    print('Conda env:', os.environ.get("CONDA_DEFAULT_ENV", ""))
+
     additional_to_load = {
         'evaluator': (
             Evaluator.get_option_spec(),
@@ -31,13 +62,13 @@ if __name__ == '__main__':
     # Set game to online model.
     env = load_env(
         os.environ,
-        overrides=dict(
-            num_games=1,
-            greedy=True,
-            T=1,
-            model="online",
-            additional_labels=['aug_code', 'move_idx'],
-        ),
+        overrides={
+            'num_games': 1,
+            'greedy': True,
+            'T': 1,
+            'model': 'online',
+            'additional_labels': ['aug_code', 'move_idx'],
+        },
         additional_to_load=additional_to_load)
 
     evaluator = env['evaluator']
@@ -47,58 +78,36 @@ if __name__ == '__main__':
     model_loader = env["model_loaders"][0]
     model = model_loader.load_model(GC.params)
 
-    gpu = model_loader.options.gpu
-    use_gpu = gpu is not None and gpu >= 0
-
     mi = env['mi']
     mi.add_model("model", model)
-    # mi.add_model(
-    #     "actor", model,
-    #     copy=True, cuda=use_gpu, gpu_id=gpu)
     mi.add_model("actor", model)
     mi["model"].eval()
     mi["actor"].eval()
 
     console = GoConsoleGTP(GC, evaluator)
-    address = addrs['game_server']
-    if address != "":
-        channel = grpc.insecure_channel(address + ':50051')
-    else :
-        channel = grpc.insecure_channel("localhost:50051")
+
     stub = play_pb2_grpc.TurnStub(channel)
     # print("\n\n\nCheck connect\n\n\n")
     ID = stub.NewRoom(play_pb2.State(status = True)).ID 
     print("Current AI's ID is ", ID)
 
-    def move2xy(v):
-        if v.lower() == "pass":
-            return -1, -1
-        x = ord(v[0].lower()) - ord('a')
-        # Skip 'i' 
-        if x >= 9:
-            x -= 1
-        y = int(v[1:]) - 1
-        return x, y
-
-    def xy2move(x, y):
-        if x == -1 and y == -1:
-            return "pass"
-
-        if x >= 8:
-            x += 1
-        return chr(x + 65) + str(y + 1)
 
     res_arr = stub.GetResumed(play_pb2.State(status = True, ID = ID)).move
     console.res_len = len(res_arr)
     # console.res_ind = 3
     # arr = ["BKD", "WFB", "BGA"]
     if console.res_len > 0 and res_arr[-1][0].upper() == "B":
-        _ = stub.UpdateNext(play_pb2.State(status = True, ID = ID))
+        _ = stub.UpdateNext(play_pb2.State(status = True, ID = ID))    
+
+    def check_end_game(m):
+        if m.quit:
+            GC.stop()
+        return m
 
     def human_actor(batch):
         # print("\n\n\nCheck human_actor\n\n\n")
         if not console.color["has_chosen"]:
-            while not stub.HasChosen(play_pb2.State(status = True, ID = ID)).status:
+            while not check_end_game(stub.HasChosen(play_pb2.State(status = True, ID = ID))).status:
                 pass
             # AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
             # human_color = AI_color % 2 + 1
@@ -127,13 +136,12 @@ if __name__ == '__main__':
                 console.prev_player = 1
                 return reply
             else:
-                while stub.IsNextPlayer(play_pb2.Player(color = human_color, ID = ID)).status:
+                while check_end_game(stub.IsNextPlayer(play_pb2.Player(color = human_color, ID = ID))).status:
                     pass
                 human_xy = stub.GetMove(play_pb2.Player(color = human_color, ID = ID))
                 reply["a"] = console.move2action(xy2move(human_xy.x, human_xy.y))
                 console.prev_player = 2
                 return reply 
-        # return console.prompt("", batch)
 
     def actor(batch):
         return console.actor(batch)
@@ -148,7 +156,7 @@ if __name__ == '__main__':
     GC.reg_callback_if_exists("train", train)
 
     GC.start()
-    GC.GC.setRequest(
+    GC.GC.getClient().setRequest(
         mi["actor"].step, -1, env['game'].options.resign_thres, -1)
 
     evaluator.episode_start(0)
@@ -158,3 +166,7 @@ if __name__ == '__main__':
         if console.exit:
             break
     GC.stop()
+
+
+if __name__ == '__main__':
+    main()

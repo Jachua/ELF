@@ -6,12 +6,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-shift
 
 case $1 in 
-EASY) LEVEL="4";;
-MEDIUM) LEVEL="256";;
-HARD) LEVEL="16384";;
+"EASY") LEVEL="64";;
+"MEDIUM") LEVEL="512";;
+"HARD") LEVEL="16384";;
 *) LEVEL="256";;
 esac
 
