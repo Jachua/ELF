@@ -312,6 +312,12 @@ class GoConsoleGTP:
 
         self.color = {'has_chosen': False, "client": 1, "AI": 2}
 
+        self.reset = False
+
+        self.ID = ""
+
+        self.res_arr = []
+
     def move2action(self, v):
         if v.lower() in self.actions:
             return self.actions[v.lower()]

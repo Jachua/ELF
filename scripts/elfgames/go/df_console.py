@@ -88,26 +88,58 @@ def main():
 
     stub = play_pb2_grpc.TurnStub(channel)
     # print("\n\n\nCheck connect\n\n\n")
-    ID = stub.NewRoom(play_pb2.State(status = True)).ID 
-    print("Current AI's ID is ", ID)
+    # ID = stub.NewRoom(play_pb2.State(status = True)).ID 
+    # print("Current AI's ID is ", ID)
 
 
-    res_arr = stub.GetResumed(play_pb2.State(status = True, ID = ID)).move
-    console.res_len = len(res_arr)
-    # console.res_ind = 3
-    # arr = ["BKD", "WFB", "BGA"]
-    if console.res_len > 0 and res_arr[-1][0].upper() == "B":
-        _ = stub.UpdateNext(play_pb2.State(status = True, ID = ID))    
+    # res_arr = stub.GetResumed(play_pb2.State(status = True, ID = ID)).move
+    # console.res_len = len(res_arr)
+    # # console.res_ind = 3
+    # # arr = ["BKD", "WFB", "BGA"]
+    # if console.res_len > 0 and res_arr[-1][0].upper() == "B":
+    #     _ = stub.UpdateNext(play_pb2.State(status = True, ID = ID))    
 
-    def check_end_game(m):
-        if m.quit:
-            GC.stop()
-        return m
+    # def check_end_game(m):
+    #     if m.quit:
+    #         GC.stop()
+    #     return m
+    
+    def reset():
+        ID = stub.NewRoom(play_pb2.State(status = True)).ID 
+        console.ID = ID
+        console.color = {'has_chosen': False, "client": 1, "AI": 2}
+        console.prev_player = 0
+        print("Current AI's ID is ", console.ID)
+        console.res_arr = stub.GetResumed(play_pb2.State(status = True, ID = ID)).move
+        console.res_len = len(console.res_arr)
+        if console.res_len > 0 and console.res_arr[-1][0].upper() == "B":
+            _ = stub.UpdateNext(play_pb2.State(status = True, ID = ID))    
+
+    reset()
+
+    def check_reset(reply):
+        console.reset = stub.CheckExit(play_pb2.State(status = True, ID = console.ID)).status
+        if console.reset:
+            print("\n\n\nRestarting game...\n\n\n")
+            reset()
+            console.reset = False
+            reply["a"] = console.actions["clear"]
+            return True, reply
+        return False, reply
 
     def human_actor(batch):
         # print("\n\n\nCheck human_actor\n\n\n")
+        reply = dict(pi = None, a = None, V = 0)
+        ID = console.ID
+        # console.reset = stub.CheckExit(play_pb2.State(status = True, ID = ID)).status
+        # if console.reset:
+        #     print("\n\n\nRestarting game...\n\n\n")
+        #     reset()
+        #     console.reset = False
+        #     reply["a"] = console.actions["clear"]
+        #     return reply
         if not console.color["has_chosen"]:
-            while not check_end_game(stub.HasChosen(play_pb2.State(status = True, ID = ID))).status:
+            while not stub.HasChosen(play_pb2.State(status = True, ID = ID)).status:
                 pass
             # AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
             # human_color = AI_color % 2 + 1
@@ -116,12 +148,11 @@ def main():
             console.color["has_chosen"] = True
         AI_color = console.color["AI"]
         human_color = console.color["client"]
-        reply = dict(pi = None, a = None, V = 0)
         # is_resumed = stub.IsResumed(play_pb2.State(status = True)).status 
         if console.res_len > 0:
             # print("\n\n\nCheck is_resumed = true\n\n\n")
             # print("\n\n\n", arr[-console.res_ind], "\n\n\n")
-            reply["a"] = console.str2action(res_arr[-console.res_len])
+            reply["a"] = console.str2action(console.res_arr[-console.res_len])
             console.res_len -= 1
             return reply
         # print("\n\n\nCheck is_resumed = false\n\n\n")    
@@ -129,19 +160,23 @@ def main():
             if console.prev_player == 1:
                 move = console.get_last_move(batch)
                 x, y = move2xy(move)
-                _ = stub.SetMove(play_pb2.Step(x = x, y = y, player = play_pb2.Player(color =  AI_color, ID = ID)))
+                _ = stub.SetMove(play_pb2.Step(x = x, y = y, 
+                player = play_pb2.Player(color =  AI_color, ID = ID)))
                 _ = stub.UpdateNext(play_pb2.State(status = True, ID = ID))
             if stub.IsNextPlayer(play_pb2.Player(color = AI_color, ID = ID)).status:
                 reply["a"] = console.actions["skip"]
                 console.prev_player = 1
                 return reply
-            else:
-                while check_end_game(stub.IsNextPlayer(play_pb2.Player(color = human_color, ID = ID))).status:
-                    pass
-                human_xy = stub.GetMove(play_pb2.Player(color = human_color, ID = ID))
-                reply["a"] = console.move2action(xy2move(human_xy.x, human_xy.y))
-                console.prev_player = 2
-                return reply 
+            # else:
+            while stub.IsNextPlayer(play_pb2.Player(color = human_color, ID = ID)).status:
+                do_reset, reply = check_reset(reply)
+                if do_reset:
+                    return reply
+                pass
+            human_xy = stub.GetMove(play_pb2.Player(color = human_color, ID = ID))
+            reply["a"] = console.move2action(xy2move(human_xy.x, human_xy.y))
+            console.prev_player = 2
+            return reply 
 
     def actor(batch):
         return console.actor(batch)
