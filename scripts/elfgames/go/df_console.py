@@ -86,7 +86,8 @@ def main():
 
     console = GoConsoleGTP(GC, evaluator)
 
-    stub = play_pb2_grpc.TurnStub(channel)
+    # TODO: create an instance of game when the client sends a request
+
     # print("\n\n\nCheck connect\n\n\n")
     # ID = stub.NewRoom(play_pb2.State(status = True)).ID 
     # print("Current AI's ID is ", ID)
@@ -110,6 +111,14 @@ def main():
         console.color = {'has_chosen': False, "client": 1, "AI": 2}
         console.prev_player = 0
         print("Current AI's ID is ", console.ID)
+        if not console.color["has_chosen"]:
+            while not stub.HasChosen(play_pb2.State(status = True, ID = ID)).status:
+                pass
+            # AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
+            # human_color = AI_color % 2 + 1
+            console.color["AI"] = stub.GetAIPlayer(play_pb2.State(status = True, ID = ID)).color
+            console.color["client"] = console.color["AI"] % 2 + 1
+            console.color["has_chosen"] = True
         console.res_arr = stub.GetResumed(play_pb2.State(status = True, ID = ID)).move
         console.res_len = len(console.res_arr)
         if console.res_len > 0 and console.res_arr[-1][0].upper() == "B":
@@ -138,14 +147,6 @@ def main():
         #     console.reset = False
         #     reply["a"] = console.actions["clear"]
         #     return reply
-        if not console.color["has_chosen"]:
-            while not stub.HasChosen(play_pb2.State(status = True, ID = ID)).status:
-                pass
-            # AI_color = stub.GetAIPlayer(play_pb2.State(status = True)).color
-            # human_color = AI_color % 2 + 1
-            console.color["AI"] = stub.GetAIPlayer(play_pb2.State(status = True, ID = ID)).color
-            console.color["client"] = console.color["AI"] % 2 + 1
-            console.color["has_chosen"] = True
         AI_color = console.color["AI"]
         human_color = console.color["client"]
         # is_resumed = stub.IsResumed(play_pb2.State(status = True)).status 
